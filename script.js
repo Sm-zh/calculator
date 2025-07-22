@@ -57,29 +57,29 @@ buttons.forEach(button => {
                 updateDisplay();
                 break;
 
-            case "+/-":
-                if (!isNaN(lastChar) || lastChar == '.') {
-                    if (expression.slice(-3, -1) == "(-") {
-                        expression = expression.slice(0, -3);
-                        expression += lastChar;
-                    }
-                    else {
-                        expression = expression.slice(0, -1);
-                        expression += "(-" + lastChar;
-                    }
-                }
-                else if (expression.slice(-2) == "(-") {
-                    expression = expression.slice(0, -2);
-                }
-                else if (expression.slice(-1) == ")")    {
-                    expression += "×(-";
-                }
-                else {
-                    expression += "(-";
-                }
-                result = evaluate();
-                updateDisplay();
-                break;
+            // case "+/-":
+            //     if (!isNaN(lastChar) || lastChar == '.') {
+            //         if (expression.slice(-3, -1) == "(-") {
+            //             expression = expression.slice(0, -3);
+            //             expression += lastChar;
+            //         }
+            //         else {
+            //             expression = expression.slice(0, -1);
+            //             expression += "(-" + lastChar;
+            //         }
+            //     }
+            //     else if (expression.slice(-2) == "(-") {
+            //         expression = expression.slice(0, -2);
+            //     }
+            //     else if (expression.slice(-1) == ")")    {
+            //         expression += "×(-";
+            //     }
+            //     else {
+            //         expression += "(-";
+            //     }
+            //     result = evaluate();
+            //     updateDisplay();
+            //     break;
 
             case "( )":
                 const open = (expression.match(/\(/g) || []).length;
@@ -109,7 +109,10 @@ buttons.forEach(button => {
                 parts = expression.split(/[\+\-\×÷%\)]/);
                 currentNumber = parts[parts.length - 1];
                 if (!hasDot(currentNumber)) {
-                    if ((isNaN(lastChar) || lastChar == "") && lastChar != ")") {
+                    if (lastChar == "%") {
+                        expression += "×0" + val;
+                    }
+                    else if ((isNaN(lastChar) || lastChar == "") && lastChar != ")") {
                         expression += "0" + val;
                     }
                     else if (lastChar == ")") {
@@ -156,8 +159,9 @@ function evaluate() {
 
 // backspace
 backspaceBtn.addEventListener("click", () => {
+    inputOutput.style.color = "unset";
     expression = expression.slice(0, -1);
-    result = evaluate(expression);
+    result = evaluate();
     updateDisplay();
 });
 
