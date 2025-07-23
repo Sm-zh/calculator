@@ -225,6 +225,7 @@ function pressedEqu() {
 }
 
 function backspacePressed() {
+    inputOutput.style.color = "unset";
     expression = expression.slice(0, -1);
     result = evaluate();
     updateDisplay();
