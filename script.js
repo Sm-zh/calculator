@@ -28,29 +28,9 @@ buttons.forEach(button => {
                 cPressed();
                 break;
 
-            // case "+/-":
-            //     if (!isNaN(lastChar) || lastChar == '.') {
-            //         if (expression.slice(-3, -1) == "(-") {
-            //             expression = expression.slice(0, -3);
-            //             expression += lastChar;
-            //         }
-            //         else {
-            //             expression = expression.slice(0, -1);
-            //             expression += "(-" + lastChar;
-            //         }
-            //     }
-            //     else if (expression.slice(-2) == "(-") {
-            //         expression = expression.slice(0, -2);
-            //     }
-            //     else if (expression.slice(-1) == ")")    {
-            //         expression += "×(-";
-            //     }
-            //     else {
-            //         expression += "(-";
-            //     }
-            //     result = evaluate();
-            //     updateDisplay();
-            //     break;
+            case "+/-":
+                toggleLastNumberSign();
+                break;
 
             case "( )":
                 const open = (expression.match(/\(/g) || []).length;
@@ -117,14 +97,17 @@ function stackEvaluation(expr) {
 
         for (let i = 0; i < expression.length; i++) {
             const ch = expression[i];
-            if (i == 0 && ch == "-") {
+            const before = i - 1;
+            if (ch === "-" && (isOperator(expression[before]) || expression[before] === "(")) {
                 numberBuffer.push(ch);
             }
             else if (isDigit(ch) || ch === '.') {
                 numberBuffer.push(ch);
-            } else if (ch === ' ') {
+            }
+            else if (ch === ' ') {
                 continue;
-            } else if (isOperator(ch)) {
+            }
+            else if (isOperator(ch)) {
                 flushNumberBuffer();
                 while (
                     stack.length &&
@@ -134,10 +117,12 @@ function stackEvaluation(expr) {
                     output.push(stack.pop());
                 }
                 stack.push(ch);
-            } else if (ch === '(') {
+            }
+            else if (ch === '(') {
                 flushNumberBuffer();
                 stack.push(ch);
-            } else if (ch === ')') {
+            }
+            else if (ch === ')') {
                 flushNumberBuffer();
                 while (stack.length && stack[stack.length - 1] !== '(') {
                     output.push(stack.pop());
@@ -156,7 +141,6 @@ function stackEvaluation(expr) {
     // calculate postfix
     function evalPostfix(postfix) {
         const stack = [];
-
         postfix.forEach(token => {
             if (!isNaN(token)) {
                 stack.push(parseFloat(token));
@@ -168,12 +152,10 @@ function stackEvaluation(expr) {
                     case '-': stack.push(a - b); break;
                     case '*': stack.push(a * b); break;
                     case '/': stack.push(a / b); break;
-                    // case '%': stack.push(a % b); break;
                 }
             }
         });
-
-        return stack.length === 1 ? stack[0] : NaN;
+        return stack.length === 1 && isFinite(stack[0]) ? stack[0] : NaN;
     }
 
     try {
@@ -184,7 +166,8 @@ function stackEvaluation(expr) {
 
         const postfix = toPostfix(expr);
         return evalPostfix(postfix);
-    } catch {
+    }
+    catch {
         return NaN;
     }
 }
@@ -242,14 +225,12 @@ function pressedEqu() {
 }
 
 function backspacePressed() {
-    // inputOutput.style.color = "unset";
     expression = expression.slice(0, -1);
     result = evaluate();
     updateDisplay();
 }
 
 function cPressed() {
-    // inputOutput.style.color = "unset";
     expression = "";
     result = "";
     updateDisplay();
@@ -258,14 +239,17 @@ function cPressed() {
 function addToExpression(val) {
     val = val.replace(/\*/g, '×').replace(/\//g, '÷');
     const lastChar = expression.slice(-1);
-    if ((lastChar == ")" && !isNaN(val)) || (lastChar == "%" && !isNaN(val))) {
-            expression += "×" + val;
+    if (val === "-" && lastChar === "(") {
+        expression += val;
     }
-    else if (lastChar != "%" && isOperator(lastChar) && isOperator(val)) {
+    else if (!isNaN(val) && (lastChar === ")" || lastChar === "%")) {
+        expression += "×" + val;
+    }
+    else if (isOperator(val) && isOperator(lastChar) && lastChar != "%") {
         expression = expression.slice(0, -1);
         expression += val;
     }
-    else if ((expression == "" && isOperator(val)) || (isOperator(val) && lastChar == "(")) {
+    else if (isOperator(val) && (expression === "" || lastChar === "(")) {
     }
     else {
         expression += val;
@@ -308,4 +292,31 @@ function hasDot(numberGroup) {
         if (count > 0) return true;
     }
     return false;
+}
+
+function toggleLastNumberSign() {
+    const regex = /\(?-?\d+(\.\d+)?\)?$/;
+    const match = expression.match(regex);
+
+    if (!match) return;
+
+    const lastNumber = match[0];
+    const index = match.index;
+
+    if (lastNumber.startsWith("(-")) {
+        const positive = lastNumber.slice(2, -1);
+        expression = expression.slice(0, index) + positive;
+    }
+    else if (lastNumber.startsWith("(")) {
+        expression = expression.slice(0, index) + `(-${lastNumber.slice(1)})`;
+    }
+    else if (lastNumber.startsWith("-")) {
+        expression = expression.slice(0, index) + `-(${lastNumber})`;
+    }
+    else {
+        expression = expression.slice(0, index) + `(-${lastNumber})`;
+    }
+
+    result = evaluate();
+    updateDisplay();
 }
