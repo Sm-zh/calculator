@@ -5,6 +5,7 @@ const backspaceBtn = document.getElementById("backspace-button");
 
 let expression = "";
 let result = "";
+let ans = false;
 
 // screen refreshing
 function updateDisplay() {
@@ -18,6 +19,8 @@ buttons.forEach(button => {
         const val = button.textContent;
         const lastChar = expression.slice(-1);
         inputOutput.style.color = "unset";
+        if (ans && !isNaN(val)) {expression = ""}; 
+        ans = false;
 
         switch (val) {
             case "=":
@@ -98,7 +101,7 @@ function stackEvaluation(expr) {
         for (let i = 0; i < expression.length; i++) {
             const ch = expression[i];
             const before = i - 1;
-            if (ch === "-" && (isOperator(expression[before]) || expression[before] === "(")) {
+            if (ch === "-" && (i == 0  ||(isOperator(expression[before]) || expression[before] === "("))) {
                 numberBuffer.push(ch);
             }
             else if (isDigit(ch) || ch === '.') {
@@ -134,7 +137,7 @@ function stackEvaluation(expr) {
         while (stack.length) {
             output.push(stack.pop());
         }
-
+        
         return output;
     }
 
@@ -180,6 +183,8 @@ backspaceBtn.addEventListener("click", () => {
 document.addEventListener("keydown", (event) => {
     inputOutput.style.color = "unset";
     const key = event.key;
+    if (ans && !isNaN(key)) {expression = ""}; 
+    ans = false;
 
     // allowed characters
     const allowedKeys = ['0','1','2','3','4','5','6','7','8','9', 
@@ -217,6 +222,7 @@ function pressedEqu() {
         inputOutput.style.color = "red";
     }
     else {
+        ans = true;
         inputOutput.style.color = "lightGreen";
         expression = result.toString();
         result = "";
